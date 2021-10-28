@@ -1,6 +1,6 @@
 import { Component } from "../lib/react.js"
-import User from "./user.js"
 import Wrapper from "./wrapper.js"
+import User from "./user-styled.js"
 
 export default class App extends Component {
   render() {
@@ -8,9 +8,9 @@ export default class App extends Component {
         <div class="app">
             ${new Wrapper({
               children: `
-                ${new User({
-                  avatar: "./images/ash.jpg",
-                  name: "Ash",
+                ${new User({ 
+                    avatar: "./images/ash.jpg",
+                    name: "Ash Ketchum",
                 }).render()}
                 `,
             }).render()}
