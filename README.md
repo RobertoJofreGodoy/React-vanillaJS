@@ -40,7 +40,7 @@ Este componente **App** tiene la misma sintaxis que el componente **User**, es u
 Desde *App* llamamos al componente *User* y lo llamamos dentro del *Template Literal* que devuelve el *render()*
 
 ```JS
-import { Component } from "../lib/react.js"
+import { Component } from "../lib/react/index.js"
 import User from "./user.js"
 
 export default class App extends Component {
@@ -74,7 +74,7 @@ Al igual que los componentes anteriores, este será una clase que se extiende de
 Ahora mediante las props podemos extraer el **children** que debe renderizar en su interior
 
 ```JS
-import { Component } from "../lib/react.js"
+import { Component } from "../lib/react/index.js"
 
 export default class Wrapper extends Component {
   render() {
@@ -92,7 +92,7 @@ export default class Wrapper extends Component {
 Llamamos a **Wrapper** desde **App** y creamos una nueva instancia de este componente, pero este **tendrá una prop llamada children** que contiene una nueva isntancia del componente **User** con sus propias props:
 
 ```JS
-import { Component } from "../lib/react.js"
+import { Component } from "../lib/react/index.js"
 import User from "./user.js"
 import Wrapper from "./wrapper.js"
 
@@ -117,3 +117,113 @@ export default class App extends Component {
 De esta manera podemos renderizar componentes dentro de componentes y crear componentes agnosticos de los componentes hijos que tendrán que renderizar
 
 > NOTA: para ver el código hasta este momento ir al commit "components within components and childrens"
+
+
+# ReactJS createElement
+Dadas las limitaciones de nuestra primera versión de ReactVanilla vamos a refactorizar el proyecto, e implementaremos la función **createElement()** que utiliza ReactJS para crear elementos...  
+
+Para ello vamos a modificar la estructura de las carpetas:  
+Hasta ahora *react.js* se encontraba en la carpeta *./lib*, ahora react tendrá su propia carpeta y una subcarpeta src: *./lib/react/src/* aquñi moveremos el archivo *react.js* y pasará a llamarse **React.js**
+> esto provocará errores las importaciones, pero las arreglaremos en el siguiente paso
+
+Dentro de esta misma carpeta creamos el archivo **ReactElement.js** que será el encargado de tener nuestro **createElement()**:
+```JS
+export function createElement() {
+  return ''
+}
+```
+Antes de seguir, vamos a crear un archivo intermedio que importe y exporte **React.js** y **ReactElement.js**, para poder llamarlos desde un solo lugar, este archivo será index.js y estará en **./lib/react/** a la misma altura de *src*, el contenido será el siguiente:
+```JS
+export { Component } from "./src/React.js"
+export { createElement } from "./src/ReactElement.js"
+```
+> con esto importamos y exportamos en solo una sentencia
+
+Ahora todas las importaciones que teniamos de **lib/react.js** las cambiamos a **lib/react/index.js** y listo, la aplicación sigue funcionando igual.  
+
+## creando createElement
+Ahora podemos seguir en el archivo **ReactElement.js**.   
+**createElement()** es una función que nos permitirá crear elementos en el DOM, para ello recibe 3 parámetros:
+- **type**: que elemento vamos a crear... ej: h1, div, img...
+- **props**: las propiedades que tendrá el elemento.
+- **content**: el contenido del elemento  
+
+```JS
+export function createElement(type, props, content) {
+  return ''
+}
+```
+por motivos didacticos antes de intentar implementar esta función en nuestra aplicación vamos a utilizarla para crear un <h1> que contenga "Hola Mundo" y la clase "Title", esto lo haremos dede *components/app.js*
+
+```JS
+import { Component, createElement } from "../lib/react/index.js"
+
+const element = createElement(
+  "h1",
+  { class: "title" },
+  "hola mundo"
+)
+```
+Ahora, las **props** son un Objeto, y además estas pueden contener cualquier cosa, no solo las clases...
+De momento vamos a implementar solo las clases, pero antes debemos poder **iterar props** para poder separar las diferentes propiedades, para ello utilizaremos el método **Object.keys()** que al pasarle un Objeto nos devuelve un Array con los nombres de las llaves, ej:  
+```JS
+const props = { class: 'title', name: 'Ash', age: 10}
+Object.keys(props) // => [ 'class', 'name', 'age' ]
+```
+Para agregar la clase al elemento crearemos una funcion que reciba otros 3 parámetros:
+- **prop**: la propiedes, en este caso 'class' 
+- **value**: el valor de la propiedad, en este caso 'title'
+- **element**: el elemento al que le queremos asignar el atributo
+
+```JS
+function setProperties(prop, value, element) {
+    const attribute = value
+    //setAttribute coo indica su nombre nos permite agregar un atributo a un elemento, este recibe el atributo y su valor, en este caso 'class' y 'title'
+    return element.setAttribute(prop, attribute) 
+}
+```
+Ahora con todo lo anterior, terminemos el **createElement()**:
+```JS
+
+function setProperties(prop, value, element) {
+    const attribute = value
+    return element.setAttribute(prop, attribute) 
+}
+
+export function createElement(type, props, content) {
+  //Creando tipo de elemento
+  const element = document.createElement(type)
+
+  //Contenido
+  if (content) {
+    element.textContent = content
+  }
+
+  // Propiedades
+  //Recorremos las props y le pasamos a setProperties: 
+  // 1- el nombre de la propiedad
+  // 2- el valor, como props es un Objeto y prop es la key con 'props[prop]' traemos el valor
+  // 3- el elemento
+  Object.keys(props).forEach((prop) =>
+    setProperties(prop, props[prop], element)
+  )
+
+  return element
+}
+```
+
+Y LISTO, si desde app.js corremos el siguiente codigo veremos en consola el elemento completo!
+
+```JS
+import { Component, createElement } from "../lib/react/index.js"
+
+const element = createElement(
+  "h1",
+  { class: "title" },
+  "hola mundo desde create element"
+)
+
+console.log(element)
+```
+
+> NOTA: para ver el código hasta este momento ir al commit "refactor y createElement"

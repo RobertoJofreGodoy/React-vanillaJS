@@ -1,5 +1,5 @@
 import styled from "../lib/styled-components.js"
-import { Component } from "../lib/react.js"
+import { Component } from "../lib/react/index.js"
 
 const userStyled = styled.setStyle`
   background-image: linear-gradient(

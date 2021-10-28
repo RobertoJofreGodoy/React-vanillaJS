@@ -1,4 +1,4 @@
-import { Component } from "../lib/react.js"
+import { Component } from "../lib/react/index.js"
 
 export default class User extends Component {
   render() {
