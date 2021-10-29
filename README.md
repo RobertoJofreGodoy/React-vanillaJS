@@ -227,3 +227,106 @@ console.log(element)
 ```
 
 > NOTA: para ver el código hasta este momento ir al commit "refactor y createElement"
+
+
+# Render createElement
+Para renderizar el elemento creado anteriormente debemos refactorizar la función **render()** de **react-dom.js**.  
+
+cambiamos *container.innerHTML = element.render()* por **container.append(element.render())**, debido a que como nuestro elemento ya es un elemento HTML solo necesitamos pasarlo al contenedor
+
+y ya podemos renderizar los elemento de **createElement**.
+
+# Children
+Ahora tenemos el problema de que no podemos renderizar componentes dentro de un componente, para solucionarlo vamos a **ReactElement.js**.
+Debemos validar las props recibidas en **createElement** ya que no todas son atributos, para ello agregamos una validación en **setProperties()**, si la **prop** es **children** vamos a ejecutar una nueva función que renderice childrens, esta se llamará **renderChildren()** y al igual que **render** de **react-dom.js** esta recibe un elemento a renderizar y el contenedor del mismo:
+
+```JS
+function setProperties(prop, value, element) {
+    // Soporte para Childrens
+    if (prop === 'children') {
+        return renderChildren(value, element)
+    }
+
+    // Soporte para atributos
+    const attribute = value
+    return element.setAttribute(prop, attribute)
+}
+```
+Ahora, esta lógica ya la tenemos en la aplicación, es la misma de render() de react-dom.js, así que vamos a importarlo y utilizaro en **renderChildren()**
+
+```JS
+import { render } from "../../react-dom.js"
+
+function renderChildren(children, container){
+    return render(children, container)
+}
+```
+Si vamos a app.js e intentamos renderizar lo siguiente, Tendremos un error:
+```JS
+export default class App extends Component {
+  render() {
+    return createElement(
+      "div",
+      {
+        class: "app",
+        children: createElement("h1", { class: "title" }, "Hola"),
+      },
+      "esta es la app"
+    )
+  }
+}
+```
+Esto se debe a que nuestro componente hijo no tiene el método *render()* que se ejecuta en **react-dom.js**.  
+Si nos vamos a ReactJS veremos que react-dom acepta **clases**, **elementos HTML** y **strings**, y de momento nuestro render() solo renderiza clases con el método render(), así que hagamos unas validaciones para saber que tipo de elemento está recibiendo nuestro **render()**:
+```JS
+export function render(element, container) {
+  if (typeof element === 'string' || element instanceof Element) {
+    return container.append(element)
+    
+  }
+  const childElement = element.render()
+  container.append(childElement)
+}
+```
+- **typeof element === 'string'**: nos permite saber si el elemento es un string
+- **element instanceof Element**: nos permite saber si el elemento es una instancia de un elemento HTML
+Si cualquiera de esas condiciones se cumple, renderizamos el elemento tal cual, sino, lo hacemos con el método render().  
+
+Si volvemos a renderizar lo que teniamos en app.js ahora si que podremos ver el componente con su componente hijo.
+
+# Multiples Childrens
+¿Que pasa si queremos renderizar multiples hijos dentro de un componente?
+```JS
+export default class App extends Component {
+  render() {
+    return createElement(
+      "div",
+      {
+        class: "app",
+        children: [
+          createElement("h1", { class: "title" }, "Hola"), 
+          createElement("h1", { class: "title" }, "Mundo"), 
+        ],
+      },
+      "esta es la app"
+    )
+  }
+}
+```
+SPOILER: no funciona.  
+esto se debe a que en nuestra funcion **renderChildren()** no tenemos en cuenta que podemos recibir un Array de children, pero esto se soluciona con una validación muy simple:
+```JS
+function renderChildren(children, container){
+    if (Array.isArray(children)) {
+        return children.forEach( (child) => {
+            render(child, container)
+        })
+    }
+    return render(children, container)
+}
+```
+**Array.isArray()** nos permite saber si un elemento es un Array, si es así, lo iteramos y rendrizamos cada elemento, de esta manera podemos renderizar multiples childrens dentro de un componente.
+
+Ahora refactorizamos los componentes **user.js** y **wrapper.js** para crearlos con createElement.
+
+> NOTA: para ver el código hasta este momento ir al commit "Render createElement y Childrens"
