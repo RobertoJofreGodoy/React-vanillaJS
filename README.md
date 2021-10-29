@@ -510,3 +510,125 @@ export default class User extends Component {
 Y LISTO, al hacer click en el componente se actualiza la edad de Ash! Tenemos el pequeño inconveniente de que se reRenderiza el componente completo y no solo la edad, pero es un gran avance!
 
 > NOTA: para ver el código hasta este momento ir al commit "Actualizando el estado del componente - SetState"
+
+# ciclo de vida de un componente
+Otra de las carácteristicas de ReactJS es que cada componente tiene varios “métodos de ciclo de vida” que permiten ejecutar código en momentos particulares del proceso del componente.  
+Vamos a implementar 3 momento del ciclo de vida de un componente:
+- **componentWillMount**: Método que se llama antes de que se renderice el componente.
+- **componentDidMount**: Método que se llama cuando el componente se pinta en el navegador.
+- **componentDidUpdate**: Método que se llama cuando el componente se actualiza.
+
+Estos métodos los declaramos en la clase **Component** de nuestro **React.js** e irán vacios, con el objetivo de poder sobreescribirlos para ejecutar algo cuando nuestro componente haga algo.
+
+Nuestro objetivo es llamar a cada uno de estos métodos en el momento exacto.
+Empecemos con **componentWillMount()**
+### componentWillMount 
+Debemos llamar a este método antes de que el componente se renderice, pero sabiendo que se va a renderizar.
+Nuestros componentes se renderizan en el **react-dom.js** con el método **render()**.
+Entonces, creemos un nuevo método intermedio, al que llamaremos **build()** que llamará al método **render()** de nuestro **Component** y que será llamado por nuestro **react-dom**.
+Dentro de **build()** ejecutaremos **componentWillMount()** antes de ejecutar el **render()** 
+
+### componentDidMount 
+Debemos llamar a este método después de que se renderice nuestro componente.
+Para este caso lo tenemos más fácil, simplemente llamamos al método al final de nuestro **react-dom**.
+
+### componentDidUpdate 
+Debemos llamar a este método cuando se haga una actualización en el componente.
+Por lo ejecutaremos en el método privado **#update()** despues del **reRender**
+
+```JS
+export class Component {
+  constructor(props = {}, state = {}) {
+    this.props = props
+    this.state = state
+  }
+  update() {}
+
+  #updater() {
+    this.update(this.render())
+    this.componentDidUpdate()
+  }
+
+  //Método que se llama antes de que se renderice el componente
+  componentWillMount() {}
+
+  //Método que se llama cuando el componente se pinta en el navegador
+  componentDidMount() {}
+
+  //Método que se llama cuando el componente se actualiza
+  componentDidUpdate() {}
+
+  setState(newState) {
+    this.state = {
+      ...this.state,
+      ...newState,
+    }
+    this.#updater()
+  }
+
+  build() {
+    this.componentWillMount()
+    return this.render()
+  }
+}
+```
+
+Ahora desde cualquier componente podemos acceder a estos métodos y ejecutar algo cuando estos sean llamados dentro del ciclo de vida del componente:
+
+```JS
+import { Component, createElement } from "../lib/react/index.js"
+
+export default class User extends Component {
+  displayName = "User"
+  state = {
+    age: 10,
+  }
+
+  componentWillMount() {
+    console.log(`el componente ${this.displayName} se va a renderizar por primera vez`)
+  }
+
+  componentDidMount() {
+    console.log(`el componente ${this.displayName} se renderizó`)
+  }
+
+  componentDidUpdate() {
+    console.log(`el componente ${this.displayName} se actualizó`)
+  }
+
+  handleClick = (event) => {
+    this.setState({
+      age: this.state.age + 1,
+    })
+  }
+
+  render() {
+    const { avatar, name } = this.props
+    const { age } = this.state
+
+    return createElement(
+      "div",
+      {
+        onClick: this.handleClick,
+        class: "user",
+        children: [
+          createElement(
+            "div",
+            {
+              class: "avatar",
+              children: createElement("img", { src: avatar }),
+            },
+            ""
+          ),
+          createElement("h2", {}, `Hola soy ${name} y tengo ${age} años`),
+        ],
+      },
+      ""
+    )
+  }
+}
+```
+
+Y Ya tenemos ciclo de vida en los componentes!
+
+> NOTA: para ver el código hasta este momento ir al commit "Añadiendo el ciclo de vida"
