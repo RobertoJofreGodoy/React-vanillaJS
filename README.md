@@ -153,7 +153,7 @@ export function createElement(type, props, content) {
   return ''
 }
 ```
-por motivos didacticos antes de intentar implementar esta función en nuestra aplicación vamos a utilizarla para crear un <h1> que contenga "Hola Mundo" y la clase "Title", esto lo haremos dede *components/app.js*
+por motivos didacticos antes de intentar implementar esta función en nuestra aplicación vamos a utilizarla para crear un "h1" que contenga "Hola Mundo" y la clase "Title", esto lo haremos dede *components/app.js*
 
 ```JS
 import { Component, createElement } from "../lib/react/index.js"
