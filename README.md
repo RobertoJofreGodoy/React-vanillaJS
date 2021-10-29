@@ -330,3 +330,70 @@ function renderChildren(children, container){
 Ahora refactorizamos los componentes **user.js** y **wrapper.js** para crearlos con createElement.
 
 > NOTA: para ver el código hasta este momento ir al commit "Render createElement y Childrens"
+
+# Eventos
+En ReactJS los eventos siempre comienzan por 'on...' ej: onClick, onChange...y estos son declarador en las **props** del componente y permiten ejecutar una función.
+Para poder hacer esto posible, debemos dar soporte a los eventos al momento de asignar las props en **ReactElement**, ya que hasta el momento solo soportamos *children y atributos*.  
+Para ello en **setProperties()** debemos seguir los siguientes pasos:
+- validamos si la prop empieza por **'on'**, esta es la convención que indica que es un **evento**.
+- debemos convertir el string **'onClick'** a **'click'** (puede ser cualquier evento en realidad)
+  - reemplazamos el texto 'on' por ''
+  - pasamos a minuscula lo restante
+- Ejecutamos una nueva función, **setEvents()** que recibirá 3 parámetros:
+  - **element**: el elemento al que se le asignará el evento
+  - **event**: el evento, ej: 'click', 'change'...
+  - **value**: que será la función a ejecutar, osea, el **callback**.
+
+En **setEvents()** solo debemos tomar el elemento en cuestión, agregarle un **addEventListener** con el **evento** a escuchar y el **callback**:
+```JS
+function setEvents(element, event, callback) {
+  return element.addEventListener(event, callback)
+}
+
+function setProperties(prop, value, element) {
+  // Soporte para Eventos
+  if (prop.startsWith('on')) {
+    const event = prop.replace('on', '').toLowerCase()
+    return setEvents(element, event, value )
+  }
+
+  // Soporte para Childrens
+  //...
+  //..
+
+  // Soporte para atributos
+  //...
+  //..
+}
+```
+Agreguemos un onClick al componente User:
+```JS
+export default class User extends Component {
+
+  handleClick = (event) => {
+    console.log(this.props.name)
+  }
+
+  render() {
+    const { avatar, name } = this.props
+
+    return createElement(
+      "div",
+      { 
+        onClick: this.handleClick,
+        class: "user",
+        children: [
+          createElement('div', { 
+            class: 'avatar', 
+            children: createElement('img', { src: avatar},)
+        }, '' ),
+        createElement('h2', {}, name )
+        ]
+      }, ''
+    )
+  }
+}
+```
+Y LISTO
+
+> NOTA: para ver el código hasta este momento ir al commit "Eventos como props"

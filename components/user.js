@@ -1,12 +1,19 @@
 import { Component, createElement } from "../lib/react/index.js"
 
 export default class User extends Component {
+
+  handleClick = (event) => {
+    console.log(this.props.name)
+  }
+
   render() {
     const { avatar, name } = this.props
 
     return createElement(
       "div",
-      { class: "user",
+      { 
+        onClick: this.handleClick,
+        class: "user",
         children: [
           createElement('div', { 
             class: 'avatar', 
