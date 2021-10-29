@@ -397,3 +397,116 @@ export default class User extends Component {
 Y LISTO
 
 > NOTA: para ver el código hasta este momento ir al commit "Eventos como props"
+
+# SetState
+Ahora, ya somos capaces de crear componentes con clases, eventos, props, hijos... nos falta hacerlos dinámicos, tener un estado y que al modificarlo el elemento se reRenderice, al fin y al cabo, esa es la magia de ReactJS...  
+
+Para ello nos vamos a nuestra clase base a nuestro **React.js**, para agregarle el método **setSate** ya que es un método que tendrán todos los componentes.  
+
+**setState nos devolverá un nuevo estado**, que es el que le llagará por parámetro, y este nuevo estado debe actualizar el estado actual.  
+
+Por lo tanto, debemos tener un **estado original**, asi que en el constructor vamos a crear este estado... al igual que las props no sabemos que tendrá el estado por lo que lo iniciamos como un *Objeto* vacio.  
+Luego en **setState**, debemos modificar el estado actual para sumarle lo que venga en el nuevo estado, recordemos que el **state** es un **Objeto**, por lo que puede guardar multiples propiedades... y como no sabemos qué propiedad es la que se ha actualizado, **setState** siempre debe **guardar el state anterior y agregar o modificar solo las propiedades afectadas**, suena complejo, pero con los **Spread Operator** esto queda en 2 simples lineas:
+```JS
+export class Component {
+  constructor(props = {}, state = {}) {
+    this.props = props
+    this.state = state
+  }
+
+  setState(newState) {
+    this.state = {
+      ...this.state,
+      ...newState
+    }
+  }
+}
+```
+Con esto ya podemos hacer referencia al **state** dentro de cualquier componente y actualizarlo, pero nos falta que el componente se reRenderice. Para ello nos vamos a **react-dom**:  
+
+Recordemos que **react-dom** es el encargado final de renderizar cualquier elemento de nuestra app.
+Vamos a crear la función **reRender()** que recibirá el componente modificado con el nuevo **state** y lo reemplazará por el componente "viejo". Además el *nuevo componente* debe pasar a ser el *viejo componente* para poder volver a ejecutar esta lógica.
+Esta función la guardaremos dentro de un método del elemento (que aún no hemos creado), para que el elemento pueda utilizar esta función y actualizarse por su cuenta, el método lo llamaremos **update**:
+
+```JS
+export function render(element, container) {
+  if (typeof element === 'string' || element instanceof Element) {
+    return container.append(element)
+  }
+  
+  function reRender(newChild){
+    container.replaceChild(newChild, childElement)
+    childElement = newChild
+  }
+  //guardamos la funcion reRender dentro del método update del elemento
+  element.update = reRender
+
+  let childElement = element.render()
+  container.append(childElement)
+}
+```
+Ahora al modificar el **state** debemos llamar al **update** que contiene el **reRender**, pero estamos modificando el componente mismo, por lo que necesiamos poder hacerlo de manera segura, privada, para ello vamos a crear un método privado, esto se hace agregando el simbolo # en el nombre del método, el nuevo método privado se llamará **#update** que sçolo podrá ser accedido desde el mismo componente y será el encargado de llamar a **update** y pasarle como parámetro el nuevo componente a renderizar... Ejecutaremos **#update()** cada vez que se modifique el **state**:
+
+```JS
+export class Component {
+  constructor(props = {}, state = {}) {
+    this.props = props
+    this.state = state
+  }
+  //update alamcena reRender()
+  update() {}
+
+  #updater() {
+    this.update(this.render())
+  }
+
+  setState(newState) {
+    this.state = {
+      ...this.state,
+      ...newState,
+    }
+    this.#updater()
+  }
+}
+```
+Vamos a agregarle un **state** a *user.js* que almacene la edad y al hacer click en el elemento aumente la edad en 1
+```JS
+export default class User extends Component {
+  //propiedad state de User 
+  state = { 
+    age: 10
+  }
+
+  handleClick = (event) => {
+    this.setState({
+      //sumamos 1 a la edad que ya teniamos
+      age: this.state.age + 1,
+    })
+  }
+
+  render() {
+    const { avatar, name } = this.props
+    //llamamos al state
+    const { age } = this.state
+
+    return createElement(
+      "div",
+      { 
+        onClick: this.handleClick,
+        class: "user",
+        children: [
+          createElement('div', { 
+            class: 'avatar', 
+            children: createElement('img', { src: avatar},)
+        }, '' ),
+        //mostramos nuestro state en pantalla
+        createElement('h2', {}, `Hola soy ${name} y tengo ${age} años` )
+        ]
+      }, ''
+    )
+  }
+}
+```
+Y LISTO, al hacer click en el componente se actualiza la edad de Ash! Tenemos el pequeño inconveniente de que se reRenderiza el componente completo y no solo la edad, pero es un gran avance!
+
+> NOTA: para ver el código hasta este momento ir al commit "Actualizando el estado del componente - SetState"
