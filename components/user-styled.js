@@ -1,7 +1,7 @@
 import styled from "../lib/styled-components.js"
-import { Component } from "../lib/react/index.js"
+import { Component, createElement } from "../lib/react/index.js"
 
-const userStyled = styled.setStyle`
+const userStyled = styled.div`
   background-image: linear-gradient(
     to bottom,
     #f9f9f9 0%,
@@ -21,25 +21,33 @@ const userStyled = styled.setStyle`
   user-select: none;
 `
 
-const avatarStyled = styled.setStyle`
+const avatarStyled = styled.img`
   max-width: 150px;
   border-radius: 50%;
   border: 5px solid white;
   box-shadow: 0 0 2px black;
 `
 
-export default class User extends Component {
+export default class UserStyled extends Component {
+
+  state = {
+    mode: 'light',
+  }
+
+  componentDidMount() {
+    console.log(window.matchMedia('(prefers-color-scheme: dark)'))
+  }
+
   render() {
     const { avatar, name } = this.props
 
-    return `
-        ${userStyled(`
-            <div>
-                ${avatarStyled(avatar, "img")}
-            </div>
-            <h2>${name}</h2>
-            `, 
-            "div"
-        )}`
+    return userStyled({
+      children: [
+        avatarStyled({
+          src: avatar
+        }),
+        createElement('h2', null, name)
+      ]
+    }, '')
   }
 }
